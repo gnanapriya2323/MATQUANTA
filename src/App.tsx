@@ -1,30 +1,46 @@
 import { useState, useEffect } from 'react';
 import { Layout } from './components/layout/Layout';
+import { LoginPage } from './pages/LoginPage';
 import { Dashboard } from './pages/Dashboard';
-import { UploadPage } from './pages/UploadPage';
+import { CPSEOnboardingPage } from './pages/CPSEOnboardingPage';
 import { MaterialRecordsPage } from './pages/MaterialRecordsPage';
 import { AiMatchingPage } from './pages/AiMatchingPage';
+import { StandardizationPage } from './pages/StandardizationPage';
 import { ExpertValidationPage } from './pages/ExpertValidationPage';
 import { UnifiedMasterPage } from './pages/UnifiedMasterPage';
-import type { NavigationPage } from './types';
+import { LegacyMigrationPage } from './pages/LegacyMigrationPage';
+import { ProcurementInsightsPage } from './pages/ProcurementInsightsPage';
+import { AnalyticsPage } from './pages/AnalyticsPage';
+import { AuditTrailPage } from './pages/AuditTrailPage';
+import { SapErpIntegrationPage } from './pages/SapErpIntegrationPage';
+import { AdministrationPage } from './pages/AdministrationPage';
+import { CollaborativeProcurementPage } from './pages/CollaborativeProcurementPage';
+import type { NavigationPage, UserRole, UserSession } from './types';
 import { materialStore } from './services/materialStore';
 
 export function App() {
+  // Website must always show the Login page first upon opening
+  const [currentUser, setCurrentUser] = useState<UserSession | null>(null);
+
   const [currentPage, setCurrentPage] = useState<NavigationPage>('dashboard');
+  const [currentRole, setCurrentRole] = useState<UserRole>('expert');
   const [records, setRecords] = useState(materialStore.getRecords());
   const [matches, setMatches] = useState(materialStore.getMatches());
-  const [unifiedMaster, setUnifiedMaster] = useState(materialStore.getUnifiedMaster());
-  const [batches, setBatches] = useState(materialStore.getBatches());
   const [stats, setStats] = useState(materialStore.getStats());
-  const [selectedCandidateId, setSelectedCandidateId] = useState<string | null>(null);
+  const [selectedCandidateId] = useState<string | null>(null);
+
+  // Keep role in sync with logged in user
+  useEffect(() => {
+    if (currentUser) {
+      setCurrentRole(currentUser.role);
+    }
+  }, [currentUser]);
 
   // Subscribe to reactive store changes
   useEffect(() => {
     const syncState = () => {
       setRecords(materialStore.getRecords());
       setMatches(materialStore.getMatches());
-      setUnifiedMaster(materialStore.getUnifiedMaster());
-      setBatches(materialStore.getBatches());
       setStats(materialStore.getStats());
     };
 
@@ -34,18 +50,20 @@ export function App() {
     };
   }, []);
 
-  const handleResetData = () => {
-    if (window.confirm('Reset representative sample dataset to default state?')) {
-      materialStore.resetToDefaultSample();
-    }
+  const handleLogin = (user: UserSession) => {
+    setCurrentUser(user);
+    setCurrentRole(user.role);
+    localStorage.setItem('matquanta_user_session', JSON.stringify(user));
+  };
+
+  const handleLogout = () => {
+    setCurrentUser(null);
+    localStorage.removeItem('matquanta_user_session');
+    setCurrentPage('dashboard');
   };
 
   const handleTriggerMatching = () => {
     materialStore.triggerHarmonizationRun();
-  };
-
-  const handleSelectCandidateForValidation = (candidateId: string) => {
-    setSelectedCandidateId(candidateId);
   };
 
   const handleAcceptMatch = (
@@ -64,43 +82,55 @@ export function App() {
 
   const pendingValidationCount = matches.filter(m => m.status === 'pending').length;
 
+  // Unauthenticated user must first see the Login page
+  if (!currentUser) {
+    return <LoginPage onLogin={handleLogin} />;
+  }
+
   return (
     <Layout
       currentPage={currentPage}
       onNavigate={setCurrentPage}
-      onResetData={handleResetData}
       pendingValidationCount={pendingValidationCount}
+      currentRole={currentRole}
+      currentUser={currentUser}
+      onLogout={handleLogout}
     >
       {currentPage === 'dashboard' && (
         <Dashboard
           stats={stats}
+          currentRole={currentRole}
           onNavigate={setCurrentPage}
           onTriggerMatching={handleTriggerMatching}
         />
       )}
 
-      {currentPage === 'upload' && (
-        <UploadPage
-          batches={batches}
-          onUploadSuccess={() => {
-            // refresh
-          }}
+      {currentPage === 'onboarding' && (
+        <CPSEOnboardingPage
+          currentRole={currentRole}
+          onNavigate={setCurrentPage}
         />
       )}
 
       {currentPage === 'records' && (
         <MaterialRecordsPage
           records={records}
+          currentRole={currentRole}
           onNavigate={setCurrentPage}
         />
       )}
 
       {currentPage === 'matching' && (
         <AiMatchingPage
-          candidates={matches}
+          currentRole={currentRole}
           onNavigate={setCurrentPage}
           onTriggerRun={handleTriggerMatching}
-          onSelectForValidation={handleSelectCandidateForValidation}
+        />
+      )}
+
+      {currentPage === 'standardization' && (
+        <StandardizationPage
+          onNavigate={setCurrentPage}
         />
       )}
 
@@ -116,9 +146,42 @@ export function App() {
 
       {currentPage === 'master' && (
         <UnifiedMasterPage
-          masterRecords={unifiedMaster}
+          currentRole={currentRole}
           onNavigate={setCurrentPage}
         />
+      )}
+
+      {currentPage === 'legacy-migration' && (
+        <LegacyMigrationPage />
+      )}
+
+      {currentPage === 'collaborative-procurement' && (
+        <CollaborativeProcurementPage
+          currentRole={currentRole}
+          onNavigate={setCurrentPage}
+        />
+      )}
+
+      {currentPage === 'procurement-insights' && (
+        <ProcurementInsightsPage
+          onNavigate={setCurrentPage}
+        />
+      )}
+
+      {currentPage === 'analytics' && (
+        <AnalyticsPage />
+      )}
+
+      {currentPage === 'audit-trail' && (
+        <AuditTrailPage />
+      )}
+
+      {currentPage === 'sap-erp-integration' && (
+        <SapErpIntegrationPage />
+      )}
+
+      {currentPage === 'administration' && (
+        <AdministrationPage />
       )}
     </Layout>
   );

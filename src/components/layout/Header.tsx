@@ -1,108 +1,134 @@
 import React from 'react';
 import { 
-  AlertCircle, 
-  RotateCcw, 
-  ChevronRight
+  LogOut,
+  Menu
 } from 'lucide-react';
-import type { NavigationPage } from '../../types';
-import { DISCLAIMER_TEXT } from '../../services/sampleData';
+import type { NavigationPage, UserSession } from '../../types';
 
 interface HeaderProps {
   currentPage: NavigationPage;
-  onNavigate: (page: NavigationPage) => void;
-  onResetData: () => void;
+  onNavigate?: (page: NavigationPage) => void;
+  currentUser?: UserSession | null;
+  onLogout?: () => void;
+  onToggleMobileMenu?: () => void;
 }
 
-const pageTitles: Record<NavigationPage, { title: string; subtitle: string }> = {
+const pageTitles: Record<string, { title: string; subtitle: string }> = {
   dashboard: {
-    title: 'Harmonization Dashboard',
-    subtitle: 'Cross-CPSE material standardization metrics and deduplication summary'
-  },
-  upload: {
-    title: 'CPSE Material Upload',
-    subtitle: 'Ingest enterprise catalog dumps (CSV/Excel) and map attributes'
+    title: 'Dashboard',
+    subtitle: 'Cross-CPSE material intelligence and catalog harmonization metrics'
   },
   records: {
-    title: 'Material Records Explorer',
-    subtitle: 'Unified searchable directory of raw and harmonized CPSE materials'
+    title: 'Material Explorer',
+    subtitle: 'Multi-CPSE material catalog and harmonized material mapping'
   },
   matching: {
-    title: 'AI Material Matching & Duplicate Clustering',
-    subtitle: 'Semantic similarity matching, attribute convergence & duplicate candidate pairs'
-  },
-  validation: {
-    title: 'Expert Domain Validation Queue',
-    subtitle: 'Human-in-the-loop review to accept, reject or modify proposed unifications'
+    title: 'Harmonization Center',
+    subtitle: 'Review and validate AI-recommended material matches'
   },
   master: {
-    title: 'Unified Material Master (Golden Records)',
-    subtitle: 'Standardized enterprise taxonomy, harmonized catalog, and legacy lineage'
+    title: 'Standard Catalog',
+    subtitle: 'Approved Unified Material Master and Common National Material Codes (CNMC)'
+  },
+  onboarding: {
+    title: 'Organizations',
+    subtitle: 'Participating Central Public Sector Enterprises and catalog synchronization'
+  },
+  'collaborative-procurement': {
+    title: 'Collaborative Procurement',
+    subtitle: 'Cross-CPSE demand aggregation and collaborative procurement opportunities'
   }
 };
 
 export const Header: React.FC<HeaderProps> = ({
   currentPage,
-  onResetData
+  currentUser,
+  onLogout,
+  onToggleMobileMenu
 }) => {
-  const currentInfo = pageTitles[currentPage];
+  const currentInfo = pageTitles[currentPage] || {
+    title: 'MATQUANTA Platform',
+    subtitle: 'AI-powered Material Master Harmonization'
+  };
+
+  const getRoleDisplayName = (role?: string) => {
+    switch (role) {
+      case 'procurement':
+        return 'Procurement User';
+      case 'admin':
+        return 'Admin';
+      case 'expert':
+      default:
+        return 'Technical Expert';
+    }
+  };
+
+  const getRoleInitials = (role?: string) => {
+    switch (role) {
+      case 'procurement':
+        return 'PU';
+      case 'admin':
+        return 'AD';
+      case 'expert':
+      default:
+        return 'TE';
+    }
+  };
 
   return (
-    <header className="bg-white border-b border-slate-200 sticky top-0 z-30">
-      {/* Sample Data Disclaimer Banner - Required */}
-      <div className="bg-blue-50/70 border-b border-blue-100 px-6 py-1.5 flex items-center justify-between text-xs text-blue-900">
-        <div className="flex items-center gap-2">
-          <AlertCircle className="w-3.5 h-3.5 text-blue-600 shrink-0" />
-          <span className="font-semibold text-blue-800">Notice:</span>
-          <span className="text-blue-700">{DISCLAIMER_TEXT}</span>
-        </div>
+    <header className="bg-white border-b border-[#E2E8F0] sticky top-0 z-30 shrink-0">
+      <div className="px-5 sm:px-8 lg:px-10 py-4 flex flex-row items-center justify-between gap-4">
+        {/* Page Header: Title & Subtitle */}
         <div className="flex items-center gap-3">
-          <button
-            onClick={onResetData}
-            title="Reset to default sample dataset"
-            className="flex items-center gap-1 text-[11px] text-blue-700 hover:text-blue-900 font-medium underline underline-offset-2 transition-colors"
-          >
-            <RotateCcw className="w-3 h-3" />
-            Reset Sample State
-          </button>
-        </div>
-      </div>
+          {onToggleMobileMenu && (
+            <button
+              onClick={onToggleMobileMenu}
+              className="lg:hidden p-2 rounded-xl text-[#64748B] hover:text-[#17202A] hover:bg-slate-100 border border-[#E2E8F0]"
+              aria-label="Open Navigation Menu"
+            >
+              <Menu className="w-5 h-5" />
+            </button>
+          )}
 
-      {/* Main Topbar */}
-      <div className="px-8 py-4 flex items-center justify-between">
-        {/* Breadcrumb & Title */}
-        <div>
-          <div className="flex items-center gap-1.5 text-xs text-slate-400 font-medium mb-1">
-            <span>MATQUANTA</span>
-            <ChevronRight className="w-3.5 h-3.5" />
-            <span className="text-blue-600 font-semibold uppercase tracking-wider text-[11px]">
-              {currentPage}
-            </span>
+          <div>
+            <h1 className="text-xl sm:text-2xl font-bold text-[#17202A] tracking-tight">
+              {currentInfo.title}
+            </h1>
+            <p className="text-xs sm:text-sm text-[#64748B] mt-0.5">
+              {currentInfo.subtitle}
+            </p>
           </div>
-          <h1 className="text-xl font-extrabold text-slate-900 tracking-tight">
-            {currentInfo.title}
-          </h1>
-          <p className="text-xs text-slate-500 font-normal mt-0.5">
-            {currentInfo.subtitle}
-          </p>
         </div>
 
-        {/* Right Actions & Domain Expert Badge */}
-        <div className="flex items-center gap-4">
-          <div className="flex items-center gap-3 pl-4 border-l border-slate-200">
-            <div className="w-9 h-9 rounded-full bg-slate-100 border border-slate-200 flex items-center justify-center text-slate-700 font-semibold text-xs">
-              VR
-            </div>
-            <div className="text-left">
-              <div className="flex items-center gap-1.5">
-                <span className="text-xs font-bold text-slate-800">Dr. V. Raman</span>
-                <span className="text-[10px] font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200 px-1 rounded">
-                  Active
+        {/* User Profile & Role Info (Subtle) */}
+        {currentUser && (
+          <div className="flex items-center gap-3 shrink-0">
+            <div className="flex items-center gap-2.5">
+              <div className="w-8 h-8 rounded-xl bg-cyan-50 text-[#06B6D4] border border-cyan-200 flex items-center justify-center font-bold text-xs">
+                {getRoleInitials(currentUser.role)}
+              </div>
+              <div className="hidden sm:block text-left text-xs">
+                <span className="font-bold text-[#17202A] block text-xs leading-tight">
+                  {currentUser.name}
+                </span>
+                <span className="text-[11px] text-[#64748B] block mt-0.5">
+                  {getRoleDisplayName(currentUser.role)}
                 </span>
               </div>
-              <p className="text-[11px] text-slate-500">Domain Expert (Mech/Materials)</p>
             </div>
+
+            {onLogout && (
+              <button
+                onClick={onLogout}
+                title="Log out of session"
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold text-[#64748B] hover:text-rose-600 hover:bg-rose-50 border border-[#E2E8F0] transition-colors ml-1"
+              >
+                <LogOut className="w-3.5 h-3.5" />
+                <span className="hidden sm:inline">Logout</span>
+              </button>
+            )}
           </div>
-        </div>
+        )}
       </div>
     </header>
   );

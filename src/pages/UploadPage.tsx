@@ -93,12 +93,13 @@ export const UploadPage: React.FC<UploadPageProps> = ({
         category: item.category || 'General Industrial',
         unitOfMeasure: item.unitOfMeasure || 'NOS',
         specifications: item.specifications || {},
+        dataSource: 'CSV',
         status: 'raw',
         uploadedAt: new Date().toISOString(),
         batchId: `batch-${Date.now()}`
       }));
 
-      materialStore.addUploadBatch(selectedCpse, fileName || 'Uploaded_Dataset.csv', newRecords);
+      materialStore.addUploadBatch(selectedCpse, fileName || 'Uploaded_Dataset.csv', 'CSV', newRecords);
       setIsProcessing(false);
       setUploadSuccess(true);
       onUploadSuccess();

@@ -82,7 +82,7 @@ export const apiClient = {
     if (query) {
       const q = query.toLowerCase();
       master = master.filter(m => 
-        m.unifiedCode.toLowerCase().includes(q) || 
+        m.cnmcCode.toLowerCase().includes(q) || 
         m.standardName.toLowerCase().includes(q) ||
         m.unspscCode.includes(q)
       );
